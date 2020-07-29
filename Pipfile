@@ -9,3 +9,4 @@ pytest = "*"
 [packages]
 praw = "*"
 colorama = "*"
+python-decouple = "*"
