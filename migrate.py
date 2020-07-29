@@ -1,6 +1,7 @@
 import os, sys
 import praw
 from pprint import pprint
+import settings
 
 # Modules
 import utils
@@ -15,6 +16,18 @@ def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, use
     """
     reddit = None
 
+    if utils.is_null_or_empty(client_id):
+        print(f"Client ID was not provided.")
+        return reddit
+
+    if utils.is_null_or_empty(client_secret):
+        print(f"Client Secret was not provided.")
+        return reddit
+
+    if utils.is_null_or_empty(user_agent):
+        print(f"User agent was not provided.")
+        return reddit
+    
     if utils.is_null_or_empty(username):
         print(f"Username was not provided.")
         return reddit
@@ -24,7 +37,7 @@ def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, use
         return reddit
 
     try:
-        reddit = praw.Reddit(client_id, client_secret, user_agent, username, password)
+        reddit = praw.Reddit(client_id=client_id, client_secret=client_secret, user_agent=user_agent, username=username, password=password)
     except Exception as ex:
         log.error(ex, "An error occurred while creating a reddit instance.")
 
@@ -117,10 +130,11 @@ def list_friends(reddit: praw.Reddit, limit: int = None):
         return
 
     try:
-        friends = reddit.user.friends(limit=limit)
+        friends = list(reddit.user.friends(limit=limit))
 
         for friend in friends:
-            print(f"Name: {friend.name}")
+            pprint(vars(friend))
+            break
     except Exception as ex:
         log.error(ex, "An error occurred while reading friends information.")
 
@@ -133,11 +147,16 @@ def list_saved(reddit: praw.Reddit, limit: int = None):
         return
 
     try:
-        posts = reddit.user.me().saved(limit=limit)
+        posts = list(reddit.user.me().saved(limit=limit))
 
         for post in posts:
-            pprint(post)
-            break
+            print(f"==================================================")
+            print(f"Title: {post.title}")
+            print(f"Subreddit Name: {post.subreddit_name_prefixed}")
+            print(f"Subreddit Type: {post.subreddit_type}")
+            print(f"Is NSFW?: {post.over_18}")
+            print(f"Permalink: {post.permalink}")
+            print(f"Url: {post.url}")
     except Exception as ex:
         log.error(ex, "An error occurred while reading saved posts information.")
 
@@ -150,11 +169,15 @@ def list_upvoted(reddit: praw.Reddit, limit: int = None):
         return
 
     try:
-        posts = reddit.user.me().upvoted(limit=limit)
+        posts = list(reddit.user.me().upvoted(limit=limit))
 
         for post in posts:
-            pprint(post)
-            break
+            print(f"==================================================")
+            print(f"Title: {post.title}")
+            print(f"Subreddit Name: {post.subreddit_name_prefixed}")
+            print(f"Subreddit Type: {post.subreddit_type}")
+            print(f"Is NSFW?: {post.over_18}")
+            print(f"Url: {post.url}")
     except Exception as ex:
         log.error(ex, "An error occurred while reading upvoted posts information.")
 
@@ -167,18 +190,36 @@ def list_subreddits(reddit: praw.Reddit, limit: int = None):
         return
 
     try:
-        subreddits = reddit.user.subreddits(limit=limit)
+        subreddits = list(reddit.user.subreddits(limit=limit))
 
         for subreddit in subreddits:
-            pprint(subreddit)
-            break
+            print(f"==================================================")
+            print(f"Display Name: {subreddit.display_name_prefixed}")
+            print(f"Subreddit Type: {subreddit.subreddit_type}")
+            print(f"Is NSFW?: {subreddit.over18}")
     except Exception as ex:
         log.error(ex, "An error occurred while reading subreddits information.")
 
 def main():
     """
     """
-    pass
+    USERNAME = settings.REDDIT_USERNAME
+    PASSWORD = settings.REDDIT_PASSWORD
+    CLIENT_ID = settings.REDDIT_CLIENT_ID
+    CLIENT_SECRET = settings.REDDIT_CLIENT_SECRET
+    USER_AGENT = settings.REDDIT_USER_AGENT
+
+    reddit = get_reddit_instance(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME, password=PASSWORD)
+
+    if reddit is None:
+        return
+
+    #pprint(vars(reddit.config))
+
+    #list_friends(reddit=reddit)
+    #list_saved(reddit=reddit)
+    #list_upvoted(reddit=reddit)
+    #list_subreddits(reddit=reddit)
 
 if __name__ == "__main__":
     main()
