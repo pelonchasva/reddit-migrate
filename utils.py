@@ -1,4 +1,5 @@
 from decouple import config
+from pprint import pprint
 from logger import Logger
 
 log = Logger(__file__)
@@ -33,3 +34,14 @@ def get_env_value_by_key(key: str):
         log.error(ex, f"An error occurred while retrieving the value for the environment variable '{key}'")
 
     return value
+
+def print_schema(obj):
+    """
+    Prints the schema from a given object by using vars() method and pprint to display it nicely on the console
+    """
+    if is_null_or_empty(obj):
+        print(f"Object is not defined.")
+        return
+
+    pprint(vars(obj))
+
