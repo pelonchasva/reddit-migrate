@@ -12,7 +12,7 @@ log = Logger(__file__)
 
 def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, username: str, password: str):
     """
-    Log in into Reddit using a user account and returns a reddit instance to interact with
+    Logs into Reddit using a user account and returns a reddit instance to interact with
     """
     reddit = None
 
@@ -44,6 +44,12 @@ def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, use
     return reddit
 
 # Remove methods
+def remove_all(reddit: praw.Reddit, verbose: bool = False):
+    """
+    A global method to call all removal methods
+    """
+    pass
+
 def remove_friends(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
     """
     Removes friends in the given account
@@ -119,6 +125,96 @@ def remove_subreddits(reddit: praw.Reddit, limit: int = None, verbose: bool = Fa
         log.error(ex, "An error occurred while removing subscribed subrredits.")
 
 # Account migration methods
+def migrate_all():
+    """
+    A global method to call all migration methods
+    """
+    pass
+
+def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+    """
+    Migrates a friend list from one reddit account to another
+    """
+    friends = get_friends(reddit=origin_account, limit=limit)
+    
+    if utils.is_null_or_empty(friends):
+        print(f"Friends list is empty or was not found.")
+        return
+
+    for friend in friends:
+        redditor_name = friend.name
+
+        try:
+            # Add to destination account
+            destination_account.redditor(redditor_name).friend()
+
+            # Remove from origin account
+            origin_account.redditor(redditor_name).unfriend()
+        except Exception as ex:
+            log.error(ex, "An error occurred while migrating the redditor '{redditor_name}'.")
+
+def migrate_saved(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+    """
+    Migrates saved posts from one reddit account to another
+    """
+    posts = get_saved(reddit=origin_account, limit=limit)
+    
+    if utils.is_null_or_empty(posts):
+        print(f"Posts list is empty or was not found.")
+        return
+
+    for post in posts:
+        try:
+            # Add to destination account
+            
+
+            # Remove from origin account
+            
+            
+        except Exception as ex:
+            log.error(ex, "An error occurred while migrating the post.")
+
+def migrate_upvoted(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+    """
+    Migrates a friend list from one reddit account to another
+    """
+    posts = get_upvoted(reddit=origin_account, limit=limit)
+    
+    if utils.is_null_or_empty(posts):
+        print(f"Friends list is empty or was not found.")
+        return
+
+    for post in posts:
+        try:
+            # Add to destination account
+            
+
+            # Remove from origin account
+            
+        except Exception as ex:
+            log.error(ex, "An error occurred while migrating the post.")
+
+def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+    """
+    Migrates a list of subreddits from one reddit account to another
+    """
+    subreddits = get_subreddits(reddit=origin_account, limit=limit)
+    
+    if utils.is_null_or_empty(subreddits):
+        print(f"Subreddits list is empty or was not found.")
+        return
+
+    for subreddit in subreddits:
+        subreddit_name = subreddit.title
+
+        try:
+            # Add to destination account
+            destination_account.subreddit(subreddit_name).subscribe()
+
+            # Remove from origin account
+            origin_account.subreddit(subreddit_name).unsubscribe()
+        except Exception as ex:
+            log.error(ex, "An error occurred while migrating the subreddit '{subreddit_name}'.")
 
 # Information methods
 def list_friends(reddit: praw.Reddit, limit: int = None):
@@ -199,6 +295,83 @@ def list_subreddits(reddit: praw.Reddit, limit: int = None):
             print(f"Is NSFW?: {subreddit.over18}")
     except Exception as ex:
         log.error(ex, "An error occurred while reading subreddits information.")
+
+# Get methods
+def get_friends(reddit: praw.Reddit, limit: int = None):
+    """
+    Gets a list of friends from the given reddit account
+
+    :returns: list<praw.Redditor>
+    """
+    friends = None
+
+    if reddit is None:
+        print("No reddit instance defined.")
+        return friends
+
+    try:
+        friends = list(reddit.user.friends(limit=limit))
+    except Exception as ex:
+        log.error(ex, "An error occurred while fetching friends information.")
+
+    return friends
+
+def get_saved(reddit: praw.Reddit, limit: int = None):
+    """
+    Gets a list of saved posts from the given reddit account
+
+    :returns: list<praw.Subreddit>
+    """
+    posts = None
+
+    if reddit is None:
+        print("No reddit instance defined.")
+        return posts
+
+    try:
+        posts = list(reddit.user.me().saved(limit=limit))
+    except Exception as ex:
+        log.error(ex, "An error occurred while reading saved posts information.")
+    
+    return posts
+
+def get_upvoted(reddit: praw.Reddit, limit: int = None):
+    """
+    Gets a list of saved posts from the given reddit account
+
+    :returns: list<praw.Subreddit>
+    """
+    posts = None
+
+    if reddit is None:
+        print("No reddit instance defined.")
+        return posts
+
+    try:
+        posts = list(reddit.user.me().upvoted(limit=limit))
+    except Exception as ex:
+        log.error(ex, "An error occurred while reading upvoted posts information.")
+    
+    return posts
+
+def get_subreddits(reddit: praw.Reddit, limit: int = None):
+    """
+    Gets a list of subreddits subscribed from the given reddit account
+
+    :returns: list<praw.Subreddit>
+    """
+    posts = None
+
+    if reddit is None:
+        print("No reddit instance defined.")
+        return posts
+
+    try:
+        posts = list(reddit.user.subreddits(limit=limit))
+    except Exception as ex:
+        log.error(ex, "An error occurred while reading subreddits information.")
+    
+    return posts
 
 def main():
     """
