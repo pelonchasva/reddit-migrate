@@ -43,6 +43,11 @@ def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, use
 
     return reddit
 
+def get_account_preferences(reddit: praw.Reddit):
+    """
+    """
+    pass
+
 # Remove methods
 def remove_all(reddit: praw.Reddit, verbose: bool = False):
     """
@@ -50,17 +55,14 @@ def remove_all(reddit: praw.Reddit, verbose: bool = False):
     """
     pass
 
-def remove_friends(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
+def remove_friends(friends: list, verbose: bool = False):
     """
     Removes friends in the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(friends):
         return
 
     try:
-        friends = reddit.user.friends(limit=limit)
-
         for friend in friends:
             if verbose:
                 print(f"Removing friend => {friend.name}")
@@ -69,17 +71,14 @@ def remove_friends(reddit: praw.Reddit, limit: int = None, verbose: bool = False
     except Exception as ex:
         log.error(ex, "An error occurred while removing friends.")
 
-def remove_saved(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
+def remove_saved(posts: list, verbose: bool = False):
     """
     Removes saved submissions in the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(posts):
         return
 
     try:
-        posts = reddit.user.me().saved(limit=limit)
-
         for post in posts:
             if verbose:
                 print(f"Removing save post => {post.title}")
@@ -88,17 +87,14 @@ def remove_saved(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
     except Exception as ex:
         log.error(ex, "An error occurred while removing saved posts.")
 
-def remove_upvoted(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
+def remove_upvoted(posts: list, verbose: bool = False):
     """
     Removes upvoted posts in the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(posts):
         return
 
     try:
-        posts = reddit.user.me().upvoted(limit=limit)
-
         for post in posts:
             if verbose:
                 print(f"Removing upvoted post => {post.title}")
@@ -107,20 +103,19 @@ def remove_upvoted(reddit: praw.Reddit, limit: int = None, verbose: bool = False
     except Exception as ex:
         log.error(ex, "An error occurred while removing upvoted posts.")
 
-def remove_subreddits(reddit: praw.Reddit, limit: int = None, verbose: bool = False):
+def remove_subreddits(subreddits: list, verbose: bool = False):
     """
     Removes subreddits from the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(subreddits):
         return
 
     try:
-        subreddits = reddit.user.subreddits(limit=limit)
-
         for subreddit in subreddits:
             if verbose:
-                print(f"Removing subrredit => {subreddit.name}")
+                print(f"Removing subrredit => {subreddit.title}")
+
+            subreddit.unsubscribe()
     except Exception as ex:
         log.error(ex, "An error occurred while removing subscribed subrredits.")
 
@@ -217,34 +212,28 @@ def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Re
             log.error(ex, "An error occurred while migrating the subreddit '{subreddit_name}'.")
 
 # Information methods
-def list_friends(reddit: praw.Reddit, limit: int = None):
+def list_friends(friends: list):
     """
     Lists friends information from the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(friends):
         return
 
     try:
-        friends = list(reddit.user.friends(limit=limit))
-
         for friend in friends:
             pprint(vars(friend))
             break
     except Exception as ex:
         log.error(ex, "An error occurred while reading friends information.")
 
-def list_saved(reddit: praw.Reddit, limit: int = None):
+def list_saved(posts: list):
     """
     Lists saved posts information from the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(posts):
         return
 
     try:
-        posts = list(reddit.user.me().saved(limit=limit))
-
         for post in posts:
             print(f"==================================================")
             print(f"Title: {post.title}")
@@ -256,17 +245,14 @@ def list_saved(reddit: praw.Reddit, limit: int = None):
     except Exception as ex:
         log.error(ex, "An error occurred while reading saved posts information.")
 
-def list_upvoted(reddit: praw.Reddit, limit: int = None):
+def list_upvoted(posts: list):
     """
     Lists upvoted posts information from the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(posts):
         return
 
     try:
-        posts = list(reddit.user.me().upvoted(limit=limit))
-
         for post in posts:
             print(f"==================================================")
             print(f"Title: {post.title}")
@@ -277,17 +263,14 @@ def list_upvoted(reddit: praw.Reddit, limit: int = None):
     except Exception as ex:
         log.error(ex, "An error occurred while reading upvoted posts information.")
 
-def list_subreddits(reddit: praw.Reddit, limit: int = None):
+def list_subreddits(subreddits: list):
     """
     Lists subreddits information from the given account
     """
-    if reddit is None:
-        print("No reddit instance defined.")
+    if utils.is_null_or_empty(subreddits):
         return
 
     try:
-        subreddits = list(reddit.user.subreddits(limit=limit))
-
         for subreddit in subreddits:
             print(f"==================================================")
             print(f"Display Name: {subreddit.display_name_prefixed}")
