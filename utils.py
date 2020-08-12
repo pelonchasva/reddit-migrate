@@ -43,5 +43,8 @@ def print_schema(obj):
         print(f"Object is not defined.")
         return
 
-    pprint(vars(obj))
+    try:
+        pprint(vars(obj))
+    except Exception as ex:
+        log.error(ex, "An error ocurred while parsing the object.")
 

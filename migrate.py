@@ -2,6 +2,7 @@ import os, sys
 import praw
 from pprint import pprint
 import settings
+from getpass import getpass
 
 # Modules
 import utils
@@ -120,11 +121,14 @@ def remove_subreddits(subreddits: list, verbose: bool = False):
         log.error(ex, "An error occurred while removing subscribed subrredits.")
 
 # Account migration methods
-def migrate_all():
+def migrate_all(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
     """
     A global method to call all migration methods
     """
-    pass
+    migrate_subreddits(origin_account, destination_account, limit, verbose)
+    migrate_upvoted(origin_account, destination_account, limit, verbose)
+    migrate_saved(origin_account, destination_account, limit, verbose)
+    migrate_friends(origin_account, destination_account, limit, verbose)
 
 def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
     """
@@ -160,12 +164,11 @@ def migrate_saved(origin_account: praw.Reddit, destination_account: praw.Reddit,
 
     for post in posts:
         try:
+            pass
             # Add to destination account
             
 
             # Remove from origin account
-            
-            
         except Exception as ex:
             log.error(ex, "An error occurred while migrating the post.")
 
@@ -181,11 +184,11 @@ def migrate_upvoted(origin_account: praw.Reddit, destination_account: praw.Reddi
 
     for post in posts:
         try:
+            pass
             # Add to destination account
             
 
             # Remove from origin account
-            
         except Exception as ex:
             log.error(ex, "An error occurred while migrating the post.")
 
@@ -337,24 +340,38 @@ def get_upvoted(reddit: praw.Reddit, limit: int = None):
     
     return posts
 
-def get_subreddits(reddit: praw.Reddit, limit: int = None):
+def get_subreddits(reddit: praw.Reddit, limit: int = None, type: str = None):
     """
     Gets a list of subreddits subscribed from the given reddit account
 
     :returns: list<praw.Subreddit>
     """
-    posts = None
+    subreddits = None
 
     if reddit is None:
         print("No reddit instance defined.")
-        return posts
+        return subreddits
 
     try:
-        posts = list(reddit.user.subreddits(limit=limit))
+        subreddits = list(reddit.user.subreddits(limit=limit))
+
+        if not utils.is_null_or_empty(type):
+            subreddits = [subreddit for subreddit in subreddits if subreddit.subreddit_type == type]
     except Exception as ex:
         log.error(ex, "An error occurred while reading subreddits information.")
     
-    return posts
+    return subreddits
+
+def get_destination_account():
+    """
+    """
+    username = input(prompt="Username: ")
+    password = getpass(prompt="Password: ")
+    client_id = input(prompt="Client ID: ")
+    client_secret = input(prompt="Client Secret: ")
+    user_agent = input(prompt="User Agent: ")
+
+    return get_reddit_instance(client_id, client_secret, user_agent, username, password)
 
 def main():
     """
@@ -369,13 +386,9 @@ def main():
 
     if reddit is None:
         return
-
-    #pprint(vars(reddit.config))
-
-    #list_friends(reddit=reddit)
-    #list_saved(reddit=reddit)
-    #list_upvoted(reddit=reddit)
-    #list_subreddits(reddit=reddit)
+    
+    subreddits = get_subreddits(reddit=reddit, type="user")
+    list_subreddits(subreddits=subreddits)
 
 if __name__ == "__main__":
     main()

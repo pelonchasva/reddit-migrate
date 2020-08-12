@@ -39,12 +39,14 @@ class Logger(object):
         """
         """
         self.logger.setLevel(logging.ERROR)
+        self.logger.error(ex)
         self.logger.error(msg)
 
     def critical(self, ex: Exception, msg: str):
         """
         """
         self.logger.setLevel(logging.CRITICAL)
+        self.logger.critical(ex)
         self.logger.critical(msg)
 
     def get_log_file(self, path="./log/Reddit-Migrate.log"):
