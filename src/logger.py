@@ -49,14 +49,14 @@ class Logger(object):
         self.logger.critical(ex)
         self.logger.critical(msg)
 
-    def get_log_file(self, path="./log/Reddit-Migrate.log"):
+    def get_log_file(self, path="../log/Reddit-Migrate.log"):
         """
         Returns the path of the log file or creates one if needed
         """
         # Check if log folders exists, otherwise create it
-        if not os.path.exists('./log'):
+        if not os.path.exists('../log'):
             try:
-                os.mkdir('./log')
+                os.mkdir('../log')
             except OSError as ex:
                 print(f"Could not create folder './log'.")
 

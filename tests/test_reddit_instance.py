@@ -1,6 +1,6 @@
 import pytest
-import migrate
-import settings
+from src import migrate
+from src import settings
 
 @pytest.mark.parametrize("client_id, client_secret, user_agent, username, password",[
     (None, None, None, None, None),
