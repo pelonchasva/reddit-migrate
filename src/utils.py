@@ -4,6 +4,7 @@ from logger import Logger
 
 log = Logger(__file__)
 
+
 def is_null_or_empty(obj):
     """
     Returns True if the object is either null or an empty object, False otherwise
@@ -17,6 +18,7 @@ def is_null_or_empty(obj):
         validations.append(len(obj) == 0)
 
     return any(validations)
+
 
 def get_env_value_by_key(key: str):
     """
@@ -35,16 +37,16 @@ def get_env_value_by_key(key: str):
 
     return value
 
+
 def print_schema(obj):
     """
     Prints the schema from a given object by using vars() method and pprint to display it nicely on the console
     """
     if is_null_or_empty(obj):
-        print(f"Object is not defined.")
+        print("Object is not defined.")
         return
 
     try:
         pprint(vars(obj))
     except Exception as ex:
         log.error(ex, "An error ocurred while parsing the object.")
-

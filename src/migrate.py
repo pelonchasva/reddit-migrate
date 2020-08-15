@@ -1,4 +1,3 @@
-import os, sys
 import praw
 from pprint import pprint
 import settings
@@ -11,6 +10,7 @@ from logger import Logger
 # Create a log instance
 log = Logger(__file__)
 
+
 def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, username: str, password: str):
     """
     Logs into Reddit using a user account and returns a reddit instance to interact with
@@ -18,36 +18,43 @@ def get_reddit_instance(client_id: str, client_secret: str, user_agent: str, use
     reddit = None
 
     if utils.is_null_or_empty(client_id):
-        print(f"Client ID was not provided.")
+        print("Client ID was not provided.")
         return reddit
 
     if utils.is_null_or_empty(client_secret):
-        print(f"Client Secret was not provided.")
+        print("Client Secret was not provided.")
         return reddit
 
     if utils.is_null_or_empty(user_agent):
-        print(f"User agent was not provided.")
+        print("User agent was not provided.")
         return reddit
-    
+
     if utils.is_null_or_empty(username):
-        print(f"Username was not provided.")
+        print("Username was not provided.")
         return reddit
 
     if utils.is_null_or_empty(password):
-        print(f"Password was not provided.")
+        print("Password was not provided.")
         return reddit
 
     try:
-        reddit = praw.Reddit(client_id=client_id, client_secret=client_secret, user_agent=user_agent, username=username, password=password)
+        reddit = praw.Reddit(
+            client_id=client_id,
+            client_secret=client_secret,
+            user_agent=user_agent,
+            username=username,
+            password=password)
     except Exception as ex:
         log.error(ex, "An error occurred while creating a reddit instance.")
 
     return reddit
 
+
 def get_account_preferences(reddit: praw.Reddit):
     """
     """
     pass
+
 
 def get_account_input():
     """
@@ -63,12 +70,14 @@ def get_account_input():
 
     return get_reddit_instance(client_id, client_secret, user_agent, username, password)
 
+
 # Remove methods
 def remove_all(reddit: praw.Reddit, verbose: bool = False):
     """
     A global method to call all removal methods
     """
     pass
+
 
 def remove_friends(friends: list, verbose: bool = False):
     """
@@ -81,10 +90,11 @@ def remove_friends(friends: list, verbose: bool = False):
         for friend in friends:
             if verbose:
                 print(f"Removing friend => {friend.name}")
-            
+
             friend.unfriend()
     except Exception as ex:
         log.error(ex, "An error occurred while removing friends.")
+
 
 def remove_saved(posts: list, verbose: bool = False):
     """
@@ -97,10 +107,11 @@ def remove_saved(posts: list, verbose: bool = False):
         for post in posts:
             if verbose:
                 print(f"Removing save post => {post.title}")
-            
+
             post.unsave()
     except Exception as ex:
         log.error(ex, "An error occurred while removing saved posts.")
+
 
 def remove_upvoted(posts: list, verbose: bool = False):
     """
@@ -113,10 +124,11 @@ def remove_upvoted(posts: list, verbose: bool = False):
         for post in posts:
             if verbose:
                 print(f"Removing upvoted post => {post.title}")
-            
+
             post.downvote()
     except Exception as ex:
         log.error(ex, "An error occurred while removing upvoted posts.")
+
 
 def remove_subreddits(subreddits: list, verbose: bool = False):
     """
@@ -133,6 +145,7 @@ def remove_subreddits(subreddits: list, verbose: bool = False):
             subreddit.unsubscribe()
     except Exception as ex:
         log.error(ex, "An error occurred while removing subscribed subrredits.")
+
 
 # Account migration methods
 def migrate_all(origin_account: praw.Reddit, destination_account: praw.Reddit, verbose: bool = True):
@@ -151,14 +164,13 @@ def migrate_all(origin_account: praw.Reddit, destination_account: praw.Reddit, v
     friends = get_friends(origin_account)
     migrate_friends(origin_account, destination_account, friends, verbose)
 
+
 def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddit, friends: list, verbose: bool = True):
     """
     Migrates a friend list from one reddit account to another
     """
-    friends = get_friends(reddit=origin_account, limit=limit)
-    
     if utils.is_null_or_empty(friends):
-        print(f"Friends list is empty or was not found.")
+        print("Friends list is empty or was not found.")
         return
 
     for friend in friends:
@@ -171,14 +183,15 @@ def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddi
             # Remove from origin account
             origin_account.redditor(redditor_name).unfriend()
         except Exception as ex:
-            log.error(ex, "An error occurred while migrating the redditor '{redditor_name}'.")
+            log.error(ex, f"An error occurred while migrating the redditor '{redditor_name}'.")
+
 
 def migrate_saved(origin_account: praw.Reddit, destination_account: praw.Reddit, posts: list, verbose: bool = True):
     """
     Migrates saved posts from one reddit account to another
-    """    
+    """
     if utils.is_null_or_empty(posts):
-        print(f"Posts list is empty or was not found.")
+        print("Posts list is empty or was not found.")
         return
 
     print(f"Total items: {len(posts)}")
@@ -194,29 +207,30 @@ def migrate_saved(origin_account: praw.Reddit, destination_account: praw.Reddit,
             if type(post) == praw.models.Submission:
                 submission = destination_account.submission(id=post.id)
 
-                if submission.saved == False:
+                if submission.saved is False:
                     submission.save()
             elif type(post) == praw.models.Comment:
                 comment = destination_account.comment(id=post.id)
 
-                if comment.saved == False:
+                if comment.saved is False:
                     comment.save()
         except Exception as ex:
             log.error(ex, f"An error occurred while migrating the post id {post.id}.")
 
+
 def migrate_upvoted(origin_account: praw.Reddit, destination_account: praw.Reddit, posts: list, verbose: bool = True):
     """
     Migrates a friend list from one reddit account to another
-    """    
+    """
     if utils.is_null_or_empty(posts):
-        print(f"Friends list is empty or was not found.")
+        print("Friends list is empty or was not found.")
         return
 
     for post in posts:
         try:
             # Remove from origin account
             origin_account.submission(id=post.id).clear_vote()
-            
+
             # Add to destination account
             if type(post) == praw.models.Submission:
                 submission = destination_account.submission(id=post.id)
@@ -231,12 +245,13 @@ def migrate_upvoted(origin_account: praw.Reddit, destination_account: praw.Reddi
         except Exception as ex:
             log.error(ex, f"An error occurred while migrating the post id {post.id}.")
 
+
 def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Reddit, subreddits: list, verbose: bool = True):
     """
     Migrates a list of subreddits from one reddit account to another
-    """    
+    """
     if utils.is_null_or_empty(subreddits):
-        print(f"Subreddits list is empty or was not found.")
+        print("Subreddits list is empty or was not found.")
         return
 
     for subreddit in subreddits:
@@ -247,18 +262,18 @@ def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Re
             # Add to destination account
             dest_sub = destination_account.subreddit(subreddit_name)
 
-            if dest_sub.user_is_subscriber == False:
+            if dest_sub.user_is_subscriber is False:
                 if subreddit_type == "user":
                     print(f"Following user: {subreddit_name}")
                 elif subreddit_type == "public":
                     print(f"Joining subreddit: {subreddit_name}")
-                    
+
                 dest_sub.subscribe()
 
             # Remove from origin account
             origin_sub = origin_account.subreddit(subreddit_name)
 
-            if origin_sub.user_is_subscriber == True:
+            if origin_sub.user_is_subscriber is True:
                 if subreddit_type == "user":
                     print(f"Unfollowing user: {subreddit_name}")
                 elif subreddit_type == "public":
@@ -267,6 +282,7 @@ def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Re
                 origin_sub.unsubscribe()
         except Exception as ex:
             log.error(ex, f"An error occurred while migrating the subreddit '{subreddit_name}' with id {subreddit.id}.")
+
 
 # Information methods
 def list_friends(friends: list):
@@ -283,6 +299,7 @@ def list_friends(friends: list):
     except Exception as ex:
         log.error(ex, "An error occurred while reading friends information.")
 
+
 def list_saved(posts: list):
     """
     Lists saved posts information from the given account
@@ -292,7 +309,7 @@ def list_saved(posts: list):
 
     for post in posts:
         try:
-            print(f"==================================================")
+            print("==================================================")
             print(f"Title: {post.title}")
             print(f"Subreddit Name: {post.subreddit_name_prefixed}")
             print(f"Subreddit Type: {post.subreddit_type}")
@@ -301,6 +318,7 @@ def list_saved(posts: list):
             print(f"Url: {post.url}")
         except Exception as ex:
             log.error(ex, f"An error occurred while reading saved post information for id {post.id}.")
+
 
 def list_upvoted(posts: list):
     """
@@ -311,7 +329,7 @@ def list_upvoted(posts: list):
 
     for post in posts:
         try:
-            print(f"==================================================")
+            print("==================================================")
             print(f"Title: {post.title}")
             print(f"Subreddit Name: {post.subreddit_name_prefixed}")
             print(f"Subreddit Type: {post.subreddit_type}")
@@ -321,6 +339,7 @@ def list_upvoted(posts: list):
             log.error(ex, f"An error occurred while reading post information for id {post.id}.")
 
     print(f"Total Items: {len(posts)}")
+
 
 def list_subreddits(subreddits: list):
     """
@@ -332,7 +351,7 @@ def list_subreddits(subreddits: list):
     for subreddit in subreddits:
         try:
             pprint(vars(subreddit))
-            print(f"==================================================")
+            print("==================================================")
             print(f"Title: {subreddit.title}")
             print(f"Display Name: {subreddit.display_name}")
             print(f"Display Name Prefixed: {subreddit.display_name_prefixed}")
@@ -340,6 +359,7 @@ def list_subreddits(subreddits: list):
             print(f"Is NSFW?: {subreddit.over18}")
         except Exception as ex:
             log.error(ex, f"An error occurred while reading subreddit information for id {subreddit.id}.")
+
 
 # Get methods
 def get_friends(reddit: praw.Reddit, limit: int = None):
@@ -360,6 +380,7 @@ def get_friends(reddit: praw.Reddit, limit: int = None):
         log.error(ex, "An error occurred while fetching friends information.")
 
     return friends
+
 
 def get_saved(reddit: praw.Reddit, limit: int = None, type: str = None, is_nsfw: bool = None):
     """
@@ -383,8 +404,9 @@ def get_saved(reddit: praw.Reddit, limit: int = None, type: str = None, is_nsfw:
             posts = [post for post in posts if post.over_18 == is_nsfw]
     except Exception as ex:
         log.error(ex, "An error occurred while reading saved posts information.")
-    
+
     return posts
+
 
 def get_upvoted(reddit: praw.Reddit, limit: int = None, type: str = None, is_nsfw: bool = None):
     """
@@ -408,8 +430,9 @@ def get_upvoted(reddit: praw.Reddit, limit: int = None, type: str = None, is_nsf
             posts = [post for post in posts if post.over_18 == is_nsfw]
     except Exception as ex:
         log.error(ex, "An error occurred while reading upvoted posts information.")
-    
+
     return posts
+
 
 def get_subreddits(reddit: praw.Reddit, limit: int = None, type: str = None, is_nsfw: bool = None):
     """
@@ -428,13 +451,14 @@ def get_subreddits(reddit: praw.Reddit, limit: int = None, type: str = None, is_
 
         if not utils.is_null_or_empty(type):
             subreddits = [subreddit for subreddit in subreddits if subreddit.subreddit_type == type]
-        
+
         if is_nsfw is not None:
             subreddits = [subreddit for subreddit in subreddits if subreddit.over18 == is_nsfw]
     except Exception as ex:
         log.error(ex, "An error occurred while reading subreddits information.")
-    
+
     return subreddits
+
 
 def main():
     """
@@ -445,10 +469,16 @@ def main():
     CLIENT_SECRET = settings.REDDIT_CLIENT_SECRET
     USER_AGENT = settings.REDDIT_USER_AGENT
 
-    reddit = get_reddit_instance(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME, password=PASSWORD)
+    reddit = get_reddit_instance(
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        user_agent=USER_AGENT,
+        username=USERNAME,
+        password=PASSWORD)
 
     if reddit is None:
-        return    
+        return
+
 
 if __name__ == "__main__":
     main()

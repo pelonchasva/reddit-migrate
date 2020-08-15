@@ -1,6 +1,7 @@
 import logging
-import os, sys
+import os
 from datetime import datetime
+
 
 class Logger(object):
     """
@@ -58,7 +59,8 @@ class Logger(object):
             try:
                 os.mkdir('../log')
             except OSError as ex:
-                print(f"Could not create folder './log'.")
+                print("Could not create folder '../log'.")
+                print(f"Stacktrace: {ex}")
 
         if not os.path.exists(path):
             with open(path, "w+") as f:
