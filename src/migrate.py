@@ -49,6 +49,20 @@ def get_account_preferences(reddit: praw.Reddit):
     """
     pass
 
+def get_account_input():
+    """
+    """
+    username = input("Username: ")
+    password = getpass(prompt="Password: ")
+    client_id = input("Client ID: ")
+    client_secret = input("Client Secret: ")
+    user_agent = input("User Agent: ")
+
+    if utils.is_null_or_empty(user_agent) and not utils.is_null_or_empty(username):
+        user_agent = f"migrate by /u/{username}"
+
+    return get_reddit_instance(client_id, client_secret, user_agent, username, password)
+
 # Remove methods
 def remove_all(reddit: praw.Reddit, verbose: bool = False):
     """
@@ -121,16 +135,23 @@ def remove_subreddits(subreddits: list, verbose: bool = False):
         log.error(ex, "An error occurred while removing subscribed subrredits.")
 
 # Account migration methods
-def migrate_all(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+def migrate_all(origin_account: praw.Reddit, destination_account: praw.Reddit, verbose: bool = True):
     """
     A global method to call all migration methods
     """
-    migrate_subreddits(origin_account, destination_account, limit, verbose)
-    migrate_upvoted(origin_account, destination_account, limit, verbose)
-    migrate_saved(origin_account, destination_account, limit, verbose)
-    migrate_friends(origin_account, destination_account, limit, verbose)
+    subreddits = get_subreddits(origin_account)
+    migrate_subreddits(origin_account, destination_account, subreddits, verbose)
 
-def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+    upvoted = get_upvoted(origin_account)
+    migrate_upvoted(origin_account, destination_account, upvoted)
+
+    saved = get_saved(origin_account)
+    migrate_saved(origin_account, destination_account, saved, verbose)
+
+    friends = get_friends(origin_account)
+    migrate_friends(origin_account, destination_account, friends, verbose)
+
+def migrate_friends(origin_account: praw.Reddit, destination_account: praw.Reddit, friends: list, verbose: bool = True):
     """
     Migrates a friend list from one reddit account to another
     """
@@ -210,27 +231,42 @@ def migrate_upvoted(origin_account: praw.Reddit, destination_account: praw.Reddi
         except Exception as ex:
             log.error(ex, f"An error occurred while migrating the post id {post.id}.")
 
-def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Reddit, limit: int = None, verbose: bool = False):
+def migrate_subreddits(origin_account: praw.Reddit, destination_account: praw.Reddit, subreddits: list, verbose: bool = True):
     """
     Migrates a list of subreddits from one reddit account to another
-    """
-    subreddits = get_subreddits(reddit=origin_account, limit=limit)
-    
+    """    
     if utils.is_null_or_empty(subreddits):
         print(f"Subreddits list is empty or was not found.")
         return
 
     for subreddit in subreddits:
-        subreddit_name = subreddit.title
-
         try:
+            subreddit_name = subreddit.display_name
+            subreddit_type = subreddit.subreddit_type
+
             # Add to destination account
-            destination_account.subreddit(subreddit_name).subscribe()
+            dest_sub = destination_account.subreddit(subreddit_name)
+
+            if dest_sub.user_is_subscriber == False:
+                if subreddit_type == "user":
+                    print(f"Following user: {subreddit_name}")
+                elif subreddit_type == "public":
+                    print(f"Joining subreddit: {subreddit_name}")
+                    
+                dest_sub.subscribe()
 
             # Remove from origin account
-            origin_account.subreddit(subreddit_name).unsubscribe()
+            origin_sub = origin_account.subreddit(subreddit_name)
+
+            if origin_sub.user_is_subscriber == True:
+                if subreddit_type == "user":
+                    print(f"Unfollowing user: {subreddit_name}")
+                elif subreddit_type == "public":
+                    print(f"Leaving subreddit: {subreddit_name}")
+
+                origin_sub.unsubscribe()
         except Exception as ex:
-            log.error(ex, f"An error occurred while migrating the subreddit '{subreddit_name}'.")
+            log.error(ex, f"An error occurred while migrating the subreddit '{subreddit_name}' with id {subreddit.id}.")
 
 # Information methods
 def list_friends(friends: list):
@@ -295,8 +331,11 @@ def list_subreddits(subreddits: list):
 
     for subreddit in subreddits:
         try:
+            pprint(vars(subreddit))
             print(f"==================================================")
-            print(f"Display Name: {subreddit.display_name_prefixed}")
+            print(f"Title: {subreddit.title}")
+            print(f"Display Name: {subreddit.display_name}")
+            print(f"Display Name Prefixed: {subreddit.display_name_prefixed}")
             print(f"Subreddit Type: {subreddit.subreddit_type}")
             print(f"Is NSFW?: {subreddit.over18}")
         except Exception as ex:
@@ -397,20 +436,6 @@ def get_subreddits(reddit: praw.Reddit, limit: int = None, type: str = None, is_
     
     return subreddits
 
-def get_account_input():
-    """
-    """
-    username = input("Username: ")
-    password = getpass(prompt="Password: ")
-    client_id = input("Client ID: ")
-    client_secret = input("Client Secret: ")
-    user_agent = input("User Agent: ")
-
-    if utils.is_null_or_empty(user_agent) and not utils.is_null_or_empty(username):
-        user_agent = f"migrate by /u/{username}"
-
-    return get_reddit_instance(client_id, client_secret, user_agent, username, password)
-
 def main():
     """
     """
@@ -423,18 +448,7 @@ def main():
     reddit = get_reddit_instance(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, user_agent=USER_AGENT, username=USERNAME, password=PASSWORD)
 
     if reddit is None:
-        return
-
-    #upvoted = get_upvoted(reddit=reddit, is_nsfw=True)
-    #list_upvoted(posts=upvoted)
-    # migrate_upvoted(origin_account=reddit, destination_account=get_account_input(), posts=upvoted)
-
-    #saved = get_saved(reddit=reddit, is_nsfw=True)
-    #list_saved(posts=saved)
-    #migrate_saved(origin_account=reddit, destination_account=get_account_input(), posts=saved)
-
-    # migrate_subreddits(origin_account=reddit, destination_account=get_account_input(), limit=1)
-    # migrate_friends(origin_account=reddit, destination_account=get_account_input(), limit=1)
+        return    
 
 if __name__ == "__main__":
     main()
